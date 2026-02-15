@@ -1,8 +1,9 @@
 
 ## Environment Variables
+for the future purpose only : 
 
-
-```env
 FRONTEND_URL=http://localhost:5000
 RESEND_API=re_Zvj5BMys_45ei7Sx2UXHww2EesBLkHpnu
 MONGO_DB_URL=mongodb+srv://vintunaStore:arbin123@vintunastore.3bogeee.mongodb.net/?appName=vintunaStore
+
+
