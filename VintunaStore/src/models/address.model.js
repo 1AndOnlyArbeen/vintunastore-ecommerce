@@ -31,9 +31,6 @@ const addressSchema = new mongoose.Schema({
         default: true
     }
 
-
-
-
 },{timestamps:true})
 
 export const Address = mongoose.model ( "Address", addressSchema)

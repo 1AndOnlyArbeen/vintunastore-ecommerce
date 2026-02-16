@@ -5,6 +5,7 @@ import { apiResponse } from '../utils/apiResponse.js';
 import bcrypt from 'bcrypt';
 import { verifyEmailTemplate } from '../utils/verifyEmailTemplate.js';
 import { sendEmail } from '../config/sendEmail.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -22,9 +23,18 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // get user details from frontend
 
-  const { name, email, password } = req.body;
+  const {name,email,password } = req.body;
   if (!name || !email || !password) {
     throw new apiError(400, 'All fields are required');
+  }
+  // email validation regex
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new apiError(400, 'email should be in correct format ');
+  }
+  if (password.length < 8) {
+    throw new apiError(400, 'Password must be at least 8 characters');
   }
 
   // check if user already exists
@@ -182,4 +192,63 @@ const logoutController = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, 'user Logged out successfully '));
 });
 
-export { registerUser, verifyEmailController, loginController, logoutController };
+/*upload user avatar image
+step: 
+1. get the user id from the auth middleware
+2. get the image from the multer middleware
+3. check if the image is present or not if not throw error
+4. if image is present upload the image to cloudinary
+*/
+
+const uploadAvatarController = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const file = req.file;
+
+  if (!file) {
+    throw new apiError(400, 'image is required');
+  }
+
+  const result = await uploadOnCloudinary(file.path,);
+
+  const response = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        avatar: result.secure_url,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, response, 'avatar uploaded successfully '));
+});
+
+/*
+update user details and password hased 
+
+step :
+1. get the user id from the auth middleware
+2. get the user details from the frontend
+3. check if the user details are present or not if not throw error
+4. if user details are present update the user details in the database
+5. return the response
+*/
+
+const updateUSerDetailsController = asyncHandler(async (req, res) => {
+  
+})
+
+
+
+
+//forget password
+//verify forget password otp
+// reset the password
+//refresh token controller
+//get login user details
+
+export { registerUser, verifyEmailController, loginController, logoutController, uploadAvatarController };
