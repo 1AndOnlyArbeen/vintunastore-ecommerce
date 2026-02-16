@@ -192,15 +192,17 @@ const logoutController = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, 'user Logged out successfully '));
 });
 
-/*upload user avatar image
+
+
+const uploadAvatarController = asyncHandler(async (req, res) => {
+
+  /*upload user avatar image
 step: 
 1. get the user id from the auth middleware
 2. get the image from the multer middleware
 3. check if the image is present or not if not throw error
 4. if image is present upload the image to cloudinary
 */
-
-const uploadAvatarController = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const file = req.file;
 
@@ -227,7 +229,11 @@ const uploadAvatarController = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, response, 'avatar uploaded successfully '));
 });
 
-/*
+
+
+const updateUSerDetailsController = asyncHandler(async (req, res) => {
+
+  /*
 update user details and password hased 
 
 step :
@@ -238,8 +244,6 @@ step :
 5. return the response
 */
 
-const updateUSerDetailsController = asyncHandler(async (req, res) => {
-  
 })
 
 
