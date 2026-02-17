@@ -1,7 +1,7 @@
-const verifyEmailTemplate = ({ userName, url }) => {
+const verifyEmailTemplate = ({ name, url }) => {
   return `
 
-  <p style="color:red; background-color:blue; border:none; padding:10px; border-radius:5px; cursor:pointer; ">Hello ${userName}</p>
+  <p style="color:red; background-color:blue; border:none; padding:10px; border-radius:5px; cursor:pointer; ">Hello ${name}</p>
     <h1>Welcome to VintunaStore</h1>
     <p>Thank you for registering with VintunaStore. We are excited to have you with us.</p>
     <p>Your account has been created successfully.</p>
