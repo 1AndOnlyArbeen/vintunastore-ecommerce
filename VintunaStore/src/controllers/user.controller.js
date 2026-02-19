@@ -73,7 +73,8 @@ const registerUser = asyncHandler(async (req, res) => {
             url: verifyEmailUrl,
         }),
     });
-    return res.status(201).json(new apiResponse(201, save, 'user registered succesfully '));
+    const userResponse = await User.findById(save._id).select('-password -refreshToken');
+    return res.status(201).json(new apiResponse(201, userResponse, 'User registered successfully'));
 });
 
 const verifyEmailController = asyncHandler(async (req, res) => {
@@ -313,7 +314,14 @@ const forgetPasswordController = asyncHandler(async (req, res) => {
 
 
 
-    user.forgot_password_otp = otp;
+    const hashedOtp = await bcrypt.hash(String(otp), 10);
+    user.forgot_password_otp = hashedOtp;
+
+    // When verifying:
+    const isValidOtp = await bcrypt.compare(String(otp), user.forgot_password_otp);
+    if (!isValidOtp) {
+        throw new apiError(400, "Invalid OTP");
+    }
     user.forgot_password_expiry = otpexpiry;
 
     const savingOtp = await user.save()
@@ -399,55 +407,65 @@ const resetPasswordController = asyncHandler(async (req, res) => {
     
     */
 
-    const { email,newPassword, confirmPassword } = req.body
+    const { email, newPassword, confirmPassword, otp } = req.body
+
+     const isValidOtp = await bcrypt.compare(String(otp), user.forgot_password_otp);
+    if (!isValidOtp) {
+        throw new apiError(400, "Invalid OTP");
+    }
+    if (user.forgot_password_expiry < new Date()) {
+        throw new apiError(400, "OTP has expired");
+    }
 
     if (!email || !newPassword || !confirmPassword) {
         throw new apiError(400, "all field are required ")
-        
+
     }
+
+    
     const user = await User.findOne({ email })
 
     if (!user) {
-        throw new apiError(400," Email is not available  ")
-        
+        throw new apiError(400, " Email is not available  ")
+
     }
 
     if (newPassword !== confirmPassword) {
         throw new apiError(400, " new password and confirm password must match ")
-        
+
     }
     if (newPassword.length < 8) {
         throw new apiError(400, 'Password must be at least 8 characters');
     }
     const salt = await bcrypt.genSalt(10)
-    const hashPassword = await bcrypt.hash(newPassword,salt)
+    const hashPassword = await bcrypt.hash(newPassword, salt)
 
-    const update = await User.findByIdAndUpdate (user._id,{
-        password:hashPassword
+    const update = await User.findByIdAndUpdate(user._id, {
+        password: hashPassword
     })
 
     return res
-    .status(200)
-    .json(new apiResponse(200, "password has been updated SuccessFully"))    
+        .status(200)
+        .json(new apiResponse(200, "password has been updated SuccessFully"))
 
 })
 
 
-const refreshAccessTokenController = asyncHandler(async(req, res) => {
+const refreshAccessTokenController = asyncHandler(async (req, res) => {
 
 
-/*refresh token step :
-
-1. get the refresh token from the cookie
-2. check if the refresh token is present or not if not then throw error
-3. if refresh token is present then verify the refresh token
-4. if refresh token is valid then generate new access token and refresh token
-5. update the refresh token in the database
-6. return the response with new access token and refresh token
-
-*/
-    const incomingRefreshToken = req.cookies.refreshToken;
+    /*refresh token step :
     
+    1. get the refresh token from the cookie
+    2. check if the refresh token is present or not if not then throw error
+    3. if refresh token is present then verify the refresh token
+    4. if refresh token is valid then generate new access token and refresh token
+    5. update the refresh token in the database
+    6. return the response with new access token and refresh token
+    
+    */
+    const incomingRefreshToken = req.cookies.refreshToken;
+
     if (!incomingRefreshToken) {
         throw new apiError(401, "Unauthorized request");
     }
@@ -458,7 +476,7 @@ const refreshAccessTokenController = asyncHandler(async(req, res) => {
     );
 
     const user = await User.findById(decodedToken?._id);
-    
+
     if (!user) {
         throw new apiError(401, "Invalid refresh token");
     }
@@ -470,17 +488,17 @@ const refreshAccessTokenController = asyncHandler(async(req, res) => {
     const options = {
         httpOnly: true,
         secure: true,
-        sameSite: 'None' 
+        sameSite: 'None'
     };
 
-  
+
     const accessToken = await generateAccessToken(user._id);
     const newRefreshToken = await generateRefreshToken(user._id);
 
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)      
-        .cookie("refreshToken", newRefreshToken, options) 
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
         .json(
             new apiResponse(200,
                 { accessToken, refreshToken: newRefreshToken },
@@ -490,7 +508,7 @@ const refreshAccessTokenController = asyncHandler(async(req, res) => {
 });
 
 
-const loginUserDetailsController= asyncHandler(async(req,res) => {
+const loginUserDetailsController = asyncHandler(async (req, res) => {
 
 
     /* step to get loginUser Details
@@ -510,13 +528,13 @@ const loginUserDetailsController= asyncHandler(async(req,res) => {
     }
 
     return res
-    .status(200)
-    .json(new apiResponse(200, user, "Login user details fetched successfully "))
+        .status(200)
+        .json(new apiResponse(200, user, "Login user details fetched successfully "))
 
 
-    
-    
+
+
 })
 //get login user details
 
-export { registerUser, verifyEmailController, loginController, logoutController, uploadAvatarController, updateUSerDetailController, forgetPasswordController, verifyForgetPasswordOtpController, resetPasswordController,refreshAccessTokenController, loginUserDetailsController}
+export { registerUser, verifyEmailController, loginController, logoutController, uploadAvatarController, updateUSerDetailController, forgetPasswordController, verifyForgetPasswordOtpController, resetPasswordController, refreshAccessTokenController, loginUserDetailsController }
