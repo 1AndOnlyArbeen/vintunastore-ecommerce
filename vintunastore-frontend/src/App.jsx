@@ -1,16 +1,23 @@
 
 import './App.css'
+import { Outlet, } from "react-router-dom";
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 function App() {
 
   return (
-   <main>
+    <>
+      <Header />
+      <main>
 
-    <h2 className='text-3xl font-bold text-center text-green-600'> Welcome to VintunaStore </h2>
+        <Outlet />
 
+      </main>
 
-
-   </main>
+    <Footer />
+    </>
+    
   )
 }
 
